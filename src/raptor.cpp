@@ -123,7 +123,7 @@ void RaptorMainWindow::showPkgInfo()
 
 void RaptorMainWindow::curTabChanged(int n)
 {
-    if (n==0)
+    if ((n==0) && (tabPkgs->isEnabled()))
         lwSelectionChanged();
     else
         infoAction->setEnabled(false);
