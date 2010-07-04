@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name[]=R(apt)or
+Comment[]=Lightweight GUI for APT
+Exec=raptor
+Icon=raptor/raptor
+Type=Application
+Categories=Application;
