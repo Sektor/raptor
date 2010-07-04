@@ -163,6 +163,7 @@ void RaptorMainWindow::runProc(QString cmd)
 {
     outbuf = "";
     aptProc = new QProcess(this);
+    aptProc->setProcessChannelMode(QProcess::MergedChannels);
     connect(aptProc, SIGNAL(readyRead()), this, SLOT(pReadyRead()));
     connect(aptProc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(pFinished(int, QProcess::ExitStatus)));
     if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole))
