@@ -22,6 +22,8 @@ RaptorMainWindow::RaptorMainWindow(QWidget* parent, Qt::WindowFlags f)
     QMenu *m = menuBar()->addMenu(tr("&File"));
     resize(480, 640);
 #endif
+    infoAction = m->addAction(tr("Package info"), this, SLOT(showPkgInfo()));
+    m->addSeparator();
     m->addAction(tr("Quit"), this, SLOT(close()));
 
     tabWidget = new QTabWidget(this);
@@ -32,6 +34,7 @@ RaptorMainWindow::RaptorMainWindow(QWidget* parent, Qt::WindowFlags f)
     tabWidget->addTab(tabPkgs, tr("Packages"));
     tabWidget->addTab(tabSrcs, tr("Sources"));
     tabWidget->addTab(tabOutp, tr("Output"));
+    connect(tabWidget, SIGNAL(currentChanged(int)), this, SLOT(curTabChanged(int)));
 
     setCentralWidget(tabWidget);
 
@@ -108,6 +111,24 @@ void RaptorMainWindow::sTimerEvent()
     runProc(conscript);
 }
 
+void RaptorMainWindow::showPkgInfo()
+{
+    if (tabPkgs->lw->selectedItems().count() > 0)
+    {
+        mode = ModeInfo;
+        QString pname = extractName(tabPkgs->lw->selectedItems()[0]->text());
+        runProc("apt-cache show " + pname);
+    }
+}
+
+void RaptorMainWindow::curTabChanged(int n)
+{
+    if (n==0)
+        lwSelectionChanged();
+    else
+        infoAction->setEnabled(false);
+}
+
 void RaptorMainWindow::searchClicked(QString s)
 {
     selname = s;
@@ -139,11 +160,13 @@ void RaptorMainWindow::lwSelectionChanged()
         else
             tabPkgs->bOk->setText(tr("Install package"));
         tabPkgs->bOk->setEnabled(true);
+        infoAction->setEnabled(true);
     }
     else
     {
         tabPkgs->bOk->setText(tr("Select package"));
         tabPkgs->bOk->setEnabled(false);
+        infoAction->setEnabled(false);
     }
 }
 
@@ -180,7 +203,7 @@ void RaptorMainWindow::runProc(QString cmd)
         tabPkgs->setEnabled(false);
         tabSrcs->setEnabled(false);
         tabOutp->bStop->setEnabled(true);
-        if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole))
+        if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole) || (mode == ModeInfo))
             tabWidget->setCurrentWidget(tabOutp);
     }
 }
@@ -208,6 +231,10 @@ QString RaptorMainWindow::extractName(QString s)
 
 void RaptorMainWindow::outText(QString s)
 {
+    QTextCursor cursor = tabOutp->text->textCursor();
+    cursor.movePosition(QTextCursor::End); //QTextCursor::MoveAnchor
+    tabOutp->text->setTextCursor(cursor);
+
     tabOutp->text->insertPlainText(s);
     QScrollBar *sb = tabOutp->text->verticalScrollBar();
     sb->setValue(sb->maximum());
@@ -218,7 +245,7 @@ void RaptorMainWindow::pReadyRead()
     QString txt = aptProc->readAll();
     if (txt != "")
     {
-        if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole))
+        if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole) || (mode == ModeInfo))
             outText(txt);
         if ((mode == ModeList) || (mode == ModeSearch))
             outbuf += txt;

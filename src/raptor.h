@@ -73,7 +73,8 @@ private:
         ModeUpdate,
         ModeList,
         ModeSearch,
-        ModeConsole
+        ModeConsole,
+        ModeInfo
     };
 
     QTabWidget *tabWidget;
@@ -81,6 +82,7 @@ private:
     SourcesTab *tabSrcs;
     OutputTab *tabOutp;
     QProcess *aptProc;
+    QAction *infoAction;
     Mode mode;
     QString outbuf;
     QStringList instPkgs;
@@ -99,7 +101,9 @@ private slots:
     void updateClicked();
     void stopClicked();
     void lwSelectionChanged();
+    void showPkgInfo();
     void sTimerEvent();
+    void curTabChanged(int n);
     void pReadyRead();
     void pFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
