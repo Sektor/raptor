@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QHostInfo>
 #include <QScrollBar>
+#include <QTimer>
 
 #define APP_TITLE tr("R(apt)or")
 #define SOURCES_LIST "/etc/apt/sources.list"
@@ -33,6 +34,78 @@ RaptorMainWindow::RaptorMainWindow(QWidget* parent, Qt::WindowFlags f)
     tabWidget->addTab(tabOutp, tr("Output"));
 
     setCentralWidget(tabWidget);
+
+    //--
+
+    bool install=false;
+    bool remove=false;
+    bool update=false;
+    QStringList pkgs;
+    QStringList cl_args = QCoreApplication::arguments();
+    int ac = cl_args.count();
+    if (ac>1)
+    {
+        int tki=1;
+        while(true)
+        {
+            QString a = cl_args[tki];
+            if (a=="-i")
+            {
+                install=true;
+                tki+=1;
+            }
+            else if (a=="-r")
+            {
+                remove=true;
+                tki+=1;
+            }
+            else if (a=="-u")
+            {
+                update=true;
+                tki+=1;
+            }
+            else
+            {
+                pkgs << a;
+                tki+=1;
+            }
+
+            if (tki>=ac) break;
+        }
+    }
+
+    QString script1 = "";
+    QString script2 = "";
+    if (update)
+        script1 = "apt-get update";
+    if ((install || remove) && (pkgs.count()>0))
+    {
+        if (install)
+            script2 = "apt-get -y install";
+        if (remove)
+            script2 = "apt-get -y remove";
+        foreach (QString pkg, pkgs)
+            script2 = script2 + " " + pkg;
+    }
+    if ((!script1.isEmpty()) || (!script2.isEmpty()))
+    {
+        tabPkgs->setEnabled(false);
+        tabSrcs->setEnabled(false);
+        tabWidget->setCurrentWidget(tabOutp);
+        if ((!script1.isEmpty()) && (script2.isEmpty()))
+            conscript = script1;
+        else if ((script1.isEmpty()) && (!script2.isEmpty()))
+            conscript = script2;
+        else if ((!script1.isEmpty()) && (!script2.isEmpty()))
+            conscript = "sh -c \"" + script1 + "; " + script2 + "\"";
+        QTimer::singleShot(0, this, SLOT(sTimerEvent()));
+    }
+}
+
+void RaptorMainWindow::sTimerEvent()
+{
+    mode = ModeConsole;
+    runProc(conscript);
 }
 
 void RaptorMainWindow::searchClicked(QString s)
@@ -92,7 +165,7 @@ void RaptorMainWindow::runProc(QString cmd)
     aptProc = new QProcess(this);
     connect(aptProc, SIGNAL(readyRead()), this, SLOT(pReadyRead()));
     connect(aptProc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(pFinished(int, QProcess::ExitStatus)));
-    if ((mode == ModeDo) || (mode == ModeUpdate))
+    if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole))
         tabOutp->text->clear();
     outText(QHostInfo::localHostName() + ":~# " + cmd + "\n");
     aptProc->start(cmd);
@@ -106,7 +179,7 @@ void RaptorMainWindow::runProc(QString cmd)
         tabPkgs->setEnabled(false);
         tabSrcs->setEnabled(false);
         tabOutp->bStop->setEnabled(true);
-        if ((mode == ModeDo) || (mode == ModeUpdate))
+        if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole))
             tabWidget->setCurrentWidget(tabOutp);
     }
 }
@@ -144,7 +217,7 @@ void RaptorMainWindow::pReadyRead()
     QString txt = aptProc->readAll();
     if (txt != "")
     {
-        if ((mode == ModeDo) || (mode == ModeUpdate))
+        if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole))
             outText(txt);
         if ((mode == ModeList) || (mode == ModeSearch))
             outbuf += txt;
@@ -217,6 +290,10 @@ void RaptorMainWindow::pFinished(int exitCode, QProcess::ExitStatus exitStatus)
                 hsb->setValue(hsb->minimum());
             }
         }
+    }
+    else if (mode == ModeConsole)
+    {
+        close();
     } //if mode
 }
 

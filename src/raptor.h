@@ -72,7 +72,8 @@ private:
         ModeDo,
         ModeUpdate,
         ModeList,
-        ModeSearch
+        ModeSearch,
+        ModeConsole
     };
 
     QTabWidget *tabWidget;
@@ -84,6 +85,7 @@ private:
     QString outbuf;
     QStringList instPkgs;
     QString selname;
+    QString conscript;
 
     void runProc(QString cmd);
     void endProc();
@@ -97,6 +99,7 @@ private slots:
     void updateClicked();
     void stopClicked();
     void lwSelectionChanged();
+    void sTimerEvent();
     void pReadyRead();
     void pFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
