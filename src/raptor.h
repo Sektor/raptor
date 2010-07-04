@@ -94,6 +94,7 @@ private:
     QString getMask();
     QString extractName(QString s);
     void outText(QString s);
+    void retTabs();
 
 private slots:
     void searchClicked(QString s="");

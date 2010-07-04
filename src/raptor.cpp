@@ -252,23 +252,29 @@ void RaptorMainWindow::pReadyRead()
     }
 }
 
+void RaptorMainWindow::retTabs()
+{
+    tabPkgs->setEnabled(true);
+    tabSrcs->setEnabled(true);
+}
+
 void RaptorMainWindow::pFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     Q_UNUSED(exitCode);
     //Q_UNUSED(exitStatus);
 
+    tabOutp->bStop->setEnabled(false);
     endProc();
 
-    tabPkgs->setEnabled(true);
-    tabSrcs->setEnabled(true);
-    tabOutp->bStop->setEnabled(false);
     if (mode == ModeDo)
     {
+        retTabs();
         tabWidget->setCurrentWidget(tabPkgs);
         searchClicked(selname);
     }
     else if (mode == ModeUpdate)
     {
+        retTabs();
         tabWidget->setCurrentWidget(tabSrcs);
     }
     else if (mode == ModeList)
@@ -286,6 +292,8 @@ void RaptorMainWindow::pFinished(int exitCode, QProcess::ExitStatus exitStatus)
             mode = ModeSearch;
             runProc("apt-cache search " + getMask());
         }
+        else
+            retTabs();
     }
     else if (mode == ModeSearch)
     {
@@ -318,10 +326,15 @@ void RaptorMainWindow::pFinished(int exitCode, QProcess::ExitStatus exitStatus)
                 hsb->setValue(hsb->minimum());
             }
         }
+        retTabs();
     }
     else if (mode == ModeConsole)
     {
         close();
+    }
+    else if (mode == ModeInfo)
+    {
+        retTabs();
     } //if mode
 }
 
