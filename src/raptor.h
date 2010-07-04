@@ -83,6 +83,7 @@ private:
     OutputTab *tabOutp;
     QProcess *aptProc;
     QAction *infoAction;
+    QAction *namesOnlyAction;
     Mode mode;
     QString outbuf;
     QStringList instPkgs;
@@ -104,7 +105,7 @@ private slots:
     void lwSelectionChanged();
     void showPkgInfo();
     void sTimerEvent();
-    void curTabChanged(int n);
+    void curTabChanged();
     void pReadyRead();
     void pFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };

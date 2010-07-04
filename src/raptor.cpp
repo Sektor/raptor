@@ -23,6 +23,9 @@ RaptorMainWindow::RaptorMainWindow(QWidget* parent, Qt::WindowFlags f)
     resize(480, 640);
 #endif
     infoAction = m->addAction(tr("Package info"), this, SLOT(showPkgInfo()));
+    namesOnlyAction = m->addAction(tr("Only search on the package names"));
+    namesOnlyAction->setCheckable(true);
+    namesOnlyAction->setChecked(false);
     m->addSeparator();
     m->addAction(tr("Quit"), this, SLOT(close()));
 
@@ -34,7 +37,7 @@ RaptorMainWindow::RaptorMainWindow(QWidget* parent, Qt::WindowFlags f)
     tabWidget->addTab(tabPkgs, tr("Packages"));
     tabWidget->addTab(tabSrcs, tr("Sources"));
     tabWidget->addTab(tabOutp, tr("Output"));
-    connect(tabWidget, SIGNAL(currentChanged(int)), this, SLOT(curTabChanged(int)));
+    connect(tabWidget, SIGNAL(currentChanged(int)), this, SLOT(curTabChanged()));
 
     setCentralWidget(tabWidget);
 
@@ -121,12 +124,19 @@ void RaptorMainWindow::showPkgInfo()
     }
 }
 
-void RaptorMainWindow::curTabChanged(int n)
+void RaptorMainWindow::curTabChanged()
 {
-    if ((n==0) && (tabPkgs->isEnabled()))
+    int i = tabWidget->currentIndex();
+    if ((i==0) && (tabPkgs->isEnabled()))
+    {
+        namesOnlyAction->setEnabled(true);
         lwSelectionChanged();
+    }
     else
+    {
+        namesOnlyAction->setEnabled(false);
         infoAction->setEnabled(false);
+    }
 }
 
 void RaptorMainWindow::searchClicked(QString s)
@@ -203,6 +213,7 @@ void RaptorMainWindow::runProc(QString cmd)
         tabPkgs->setEnabled(false);
         tabSrcs->setEnabled(false);
         tabOutp->bStop->setEnabled(true);
+        curTabChanged();
         if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole) || (mode == ModeInfo))
             tabWidget->setCurrentWidget(tabOutp);
     }
@@ -256,6 +267,7 @@ void RaptorMainWindow::retTabs()
 {
     tabPkgs->setEnabled(true);
     tabSrcs->setEnabled(true);
+    curTabChanged();
 }
 
 void RaptorMainWindow::pFinished(int exitCode, QProcess::ExitStatus exitStatus)
@@ -289,11 +301,17 @@ void RaptorMainWindow::pFinished(int exitCode, QProcess::ExitStatus exitStatus)
                 if (!pname.isEmpty())
                     instPkgs.append(pname);
             }
+            QString nonly = "";
+            if (namesOnlyAction->isChecked())
+                nonly = "-n ";
             mode = ModeSearch;
-            runProc("apt-cache search " + getMask());
+            runProc("apt-cache "+ nonly +"search " + getMask());
         }
         else
+        {
             retTabs();
+            tabWidget->setCurrentWidget(tabPkgs);
+        }
     }
     else if (mode == ModeSearch)
     {
@@ -327,6 +345,7 @@ void RaptorMainWindow::pFinished(int exitCode, QProcess::ExitStatus exitStatus)
             }
         }
         retTabs();
+        tabWidget->setCurrentWidget(tabPkgs);
     }
     else if (mode == ModeConsole)
     {
