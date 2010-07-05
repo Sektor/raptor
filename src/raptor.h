@@ -16,6 +16,8 @@
 #ifdef QTOPIA
 #include <QSoftMenuBar>
 #include <QtopiaApplication>
+#else
+#include <QCoreApplication>
 #endif
 
 class PackagesTab : public QWidget
