@@ -6,6 +6,7 @@
 #include <QHostInfo>
 #include <QScrollBar>
 #include <QTimer>
+#include <QSettings>
 
 #define APP_TITLE tr("R(apt)or")
 #define SOURCES_LIST "/etc/apt/sources.list"
@@ -23,11 +24,20 @@ RaptorMainWindow::RaptorMainWindow(QWidget* parent, Qt::WindowFlags f)
     resize(480, 640);
 #endif
     infoAction = m->addAction(tr("Package info"), this, SLOT(showPkgInfo()));
-    namesOnlyAction = m->addAction(tr("Only search on the package names"));
+    namesOnlyAction = m->addAction(tr("Only search on the package names"), this, SLOT(saveSettings()));
     namesOnlyAction->setCheckable(true);
     namesOnlyAction->setChecked(false);
     m->addSeparator();
     m->addAction(tr("Quit"), this, SLOT(close()));
+
+    QCoreApplication::setOrganizationDomain("qtmoko.org");
+    QCoreApplication::setApplicationName("Raptor");
+
+    QSettings settings;
+    settings.beginGroup("Search");
+    bool namesOnly = settings.value("namesOnly", false).toBool();
+    namesOnlyAction->setChecked(namesOnly);
+    settings.endGroup();
 
     tabWidget = new QTabWidget(this);
     tabPkgs = new PackagesTab(this);
@@ -112,6 +122,14 @@ void RaptorMainWindow::sTimerEvent()
 {
     mode = ModeConsole;
     runProc(conscript);
+}
+
+void RaptorMainWindow::saveSettings()
+{
+    QSettings settings;
+    settings.beginGroup("Search");
+    settings.setValue("namesOnly", namesOnlyAction->isChecked());
+    settings.endGroup();
 }
 
 void RaptorMainWindow::showPkgInfo()
