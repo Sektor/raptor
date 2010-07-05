@@ -141,10 +141,14 @@ void RaptorMainWindow::curTabChanged()
 
 void RaptorMainWindow::searchClicked(QString s)
 {
-    selname = s;
-    mode = ModeList;
-    //runProc("sh -c \"dpkg --get-selections | grep " + getMask() + "\"");
-    runProc("dpkg --get-selections");
+    QString m = getMask();
+    if ((m != "") && (m != "\"\""))
+    {
+        selname = s;
+        mode = ModeList;
+        //runProc("sh -c \"dpkg --get-selections | grep " + getMask() + "\"");
+        runProc("dpkg --get-selections");
+    }
 }
 
 void RaptorMainWindow::okClicked()
