@@ -197,7 +197,8 @@ void RaptorMainWindow::runProc(QString cmd)
     outbuf = "";
     aptProc = new QProcess(this);
     //aptProc->setProcessChannelMode(QProcess::MergedChannels);
-    connect(aptProc, SIGNAL(readyRead()), this, SLOT(pReadyRead()));
+    connect(aptProc, SIGNAL(readyReadStandardOutput()), this, SLOT(pReadyReadStandardOutput()));
+    connect(aptProc, SIGNAL(readyReadStandardError()), this, SLOT(pReadyReadStandardError()));
     connect(aptProc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(pFinished(int, QProcess::ExitStatus)));
     if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole))
         tabOutp->text->clear();
@@ -251,15 +252,25 @@ void RaptorMainWindow::outText(QString s)
     sb->setValue(sb->maximum());
 }
 
-void RaptorMainWindow::pReadyRead()
+void RaptorMainWindow::pReadyReadStandardOutput()
 {
-    QString txt = aptProc->readAll();
+    QString txt = aptProc->readAllStandardOutput();
     if (txt != "")
     {
         if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole) || (mode == ModeInfo))
             outText(txt);
         if ((mode == ModeList) || (mode == ModeSearch))
             outbuf += txt;
+    }
+}
+
+void RaptorMainWindow::pReadyReadStandardError()
+{
+    QString txt = aptProc->readAllStandardError();
+    if (txt != "")
+    {
+        if ((mode == ModeDo) || (mode == ModeUpdate) || (mode == ModeConsole) || (mode == ModeInfo))
+            outText(txt);
     }
 }
 

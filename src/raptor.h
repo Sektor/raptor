@@ -106,7 +106,8 @@ private slots:
     void showPkgInfo();
     void sTimerEvent();
     void curTabChanged();
-    void pReadyRead();
+    void pReadyReadStandardOutput();
+    void pReadyReadStandardError();
     void pFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
 
